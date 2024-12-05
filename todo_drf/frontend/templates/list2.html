@@ -1,0 +1,820 @@
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>TO DO</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+	<link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet">
+
+	<style type="text/css">
+		body {
+			background: rgb(54, 217, 182);
+			background: linear-gradient(90deg, rgba(54, 217, 182, 1) 0%, rgba(32, 152, 126, 1) 43%, rgba(0, 212, 255, 1) 100%);
+		}
+
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		p,
+		span,
+		strike {
+			font-family: 'Montserrat', sans-serif;
+
+		}
+
+		#task-container {
+			max-width: 600px;
+			margin: 0 auto;
+			box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+			background-color: #fff;
+
+			margin-top: 100px;
+			margin-bottom: 100px;
+
+			justify-content: space-around;
+			align-items: flex-start;
+
+		}
+
+		#form-wrapper {
+			position: -webkit-sticky;
+			position: sticky;
+			top: 0rem;
+			border-bottom: 1px solid #e9e9e9;
+			background-color: #fff;
+			box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
+			padding: 40px;
+		}
+
+		#submit {
+			background-color: #36d9b6;
+			border-radius: 0;
+			border: 0;
+			color: #fff;
+		}
+
+		.flex-wrapper {
+			display: flex;
+		}
+
+		.task-wrapper {
+			margin: 5px;
+			padding: 5px;
+			padding: 20px;
+			cursor: pointer;
+			border-bottom: 1px solid #e9e9e9;
+			color: #686868;
+		}
+
+		#logoutBtn {
+			position: absolute;
+			border-radius: 0;
+			/* right: 	10px;
+			bottom: 20px; */
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+
+		<div id="task-container">
+			<div id="form-wrapper">
+				<form id="form">
+					<div class="flex-wrapper">
+						<div style="flex: 6">
+							<input id="title" class="form-control" type="text" name="title" placeholder="Add task">
+						</div>
+						<div style="flex: 1">
+							<input id="submit" class="btn" type="submit" value='Submit'>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<div id="list-wrapper">
+
+			</div>
+
+			<div style="margin-right: 10px;">
+				<!-- You can change the action URL to point to your actual logout logic later -->
+				<button class="btn btn-danger" id="logoutBtn">Logout</button>
+			</div>
+
+
+		</div>
+
+	</div>
+
+
+	<script type="text/javascript">
+		/*
+			KEY COMPONENTS:
+			"activeItem" = null until an edit button is clicked. Will contain object of item we are editing
+			"list_snapshot" = Will contain previous state of list. Used for removing extra rows on list update
+			
+			PROCESS:
+			1 - Fetch Data and build rows "buildList()"
+			2 - Create Item on form submit
+			3 - Edit Item click - Prefill form and change submit URL
+			4 - Delete Item - Send item id to delete URL
+			5 - Cross out completed task - Event handle updated item
+
+			NOTES:
+			-- Add event handlers to "edit", "delete", "title"
+			-- Render with strike through items completed
+			-- Remove extra data on re-render
+			-- CSRF Token
+		*/
+
+
+		// 	function showStatusMessage(statusCode, message) {
+		// 	const statusContainer = document.getElementById('status-message');
+		// 	statusContainer.innerHTML = `<div class="alert alert-info">${message} (Status Code: ${statusCode})</div>`;
+		// }
+
+
+		function getCookie(name) {
+			var cookieValue = null;
+			if (document.cookie && document.cookie !== '') {
+				var cookies = document.cookie.split(';');
+				for (var i = 0; i < cookies.length; i++) {
+					var cookie = cookies[i].trim();
+					// Does this cookie string begin with the name we want?
+					if (cookie.substring(0, name.length + 1) === (name + '=')) {
+						cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+
+
+		var csrftoken = getCookie('csrftoken');
+
+		// Check if the token is expired and refresh it if needed
+		async function checkAccessToken() {
+
+			let accessToken = getCookie('access_token');
+			// const refreshToken = getCookie('refresh_token');
+			console.log(accessToken)
+			if (accessToken === null) {
+				const refreshToken = getCookie('refresh_token');
+				if (!refreshToken) {
+					console.log(accessToken)
+					alert('Session expired. Please log in again.');
+					window.location.href = '/login';
+
+					return null;
+				}
+
+				try {
+					const response = await fetch('http://127.0.0.1:8000/api/auth/token/refresh/', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ refresh: refreshToken })
+					});
+
+					if (response.ok) {
+						const data = await response.json();
+						console.log(data)
+						setCookie('access_token', data.access, 1 / 1440); // Short-lived token
+						console.log(accessToken)
+						return data.access;
+					} else {
+						console.log(accessToken)
+						alert('Failed to refresh session. Please log in again.');
+						window.location.href = '/login';
+						return null;
+					}
+				} catch (error) {
+					console.error('Error refreshing access token:', error);
+					alert('Failed to refresh session. Please log in again.');
+					window.location.href = '/login';
+					return null;
+				}
+			}
+
+			return accessToken;
+		}
+
+		// Helper function to determine if a token is expired
+		// function isTokenExpired(token) {
+		//     try {
+		//         const payload = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
+		//         const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+		//         return payload.exp < currentTime; // Compare expiration with current time
+		//     } catch (e) {
+		//         console.error('Error decoding token:', e);
+		//         return true; // Treat invalid token as expired
+		//     }
+		// }
+
+		checkUserLogin()
+		var activeItem = null
+		var list_snapshot = []
+
+		let accessToken = getCookie('access_token');
+
+
+		buildList()
+
+		function buildList() {
+
+
+			var wrapper = document.getElementById('list-wrapper')
+			//wrapper.innerHTML = ''
+
+
+			console.log("inside buid list function ")
+
+			// let accessToken = getCookie('access_token');
+			console.log(accessToken)
+			const headers = {
+				"X-CSRF-Token": csrftoken,
+				"Content-Type": "application/json",
+				'Authorization': `Bearer ${accessToken}`
+			}
+
+			// console.log('Access Token:', accessToken);
+			var url = 'http://127.0.0.1:8000/api/task-list/'
+
+			fetch(url, {
+				headers: {
+					"X-CSRF-Token": csrftoken,
+					"Content-Type": "application/json",
+					'Authorization': `Bearer ${accessToken}`
+				}
+			})
+				.then((resp) => {
+					return resp.json(); // Ensure you return the result of resp.json()
+				})
+				.then((data) => {
+					// handleResponseAlert(data); // Now use the parsed JSON data
+					console.log('Data:', data); // Logging the parsed data
+
+
+
+					//    fetch(url)
+					//   .then((response) => {
+					//   console.log('Response status:', response.status);
+
+					//     // Handle response status codes
+					//     if (response.status === 200) {
+					//       showStatusMessage(200, 'Request successful!');
+					//       return response.json();
+					//     } else if (response.status === 201) {
+					//       showStatusMessage(201, 'Resource created successfully!');
+					//       return response.json();
+					//     } else if (response.status === 400) {
+					//       showStatusMessage(400, 'Bad request. Please check your data.');
+					//     } else if (response.status === 404) {
+					//       showStatusMessage(404, 'Resource not found.');
+					//     } else if (response.status === 500) {
+					//       showStatusMessage(500, 'Server error. Please try again later.');
+					//     } else {
+					//       showStatusMessage(response.status, 'Unknown error.');
+					//     }
+					//   })
+					//   .then((resp) => resp.json())
+					// 		.then(function(data){
+					// 			console.log('Data:', data)  // Logs the data if the response was successful
+					// //var list = data;
+					// //var wrapper = document.getElementById('list-wrapper');
+					// //wrapper.innerHTML = ''; // Clear the list before re-building	
+
+
+
+					console.log(data)
+					var list = data
+
+					for (var i in list) {
+
+
+						try {
+							document.getElementById(`data-row-${i}`).remove()
+						} catch (err) {
+
+						}
+
+
+
+						var title = `<span class="title">${list[i].title}</span>`
+						if (list[i].completed == true) {
+							title = `<strike class="title">${list[i].title}</strike>`
+						}
+
+						var item = `
+						<div id="data-row-${i}" class="task-wrapper flex-wrapper">
+							<div style="flex:7">
+								${title}
+							</div>
+							<div style="flex:1">
+								<button class="btn btn-sm btn-outline-info edit">Edit </button>
+							</div>
+							<div style="flex:1">
+								<button class="btn btn-sm btn-outline-dark delete">-</button>
+							</div>
+						</div>
+
+					`
+						wrapper.innerHTML += item
+
+					}
+
+					if (list_snapshot.length > list.length) {
+						for (var i = list.length; i < list_snapshot.length; i++) {
+							document.getElementById(`data-row-${i}`).remove()
+						}
+					}
+
+					list_snapshot = list
+
+					for (var i in list) {
+						var editBtn = document.getElementsByClassName('edit')[i]
+						var deleteBtn = document.getElementsByClassName('delete')[i]
+						var title = document.getElementsByClassName('title')[i]
+
+						// editBtn.addEventListener('click', (function(item){
+						// 	return function(){
+						// 		editItem(item)
+						// 	}
+						// })(list[i]))
+
+						//Immediatly Invoked Function (IIF) + Closure for saving current loop item in memory
+						editBtn.addEventListener('click', (() => {
+
+							let item = list[i]
+							return () => {
+								editItem(item)
+							}
+						})())
+
+
+						deleteBtn.addEventListener('click', (function (item) {
+							return function () {
+								deleteItem(item)
+							}
+						})(list[i]))
+
+
+
+
+						title.addEventListener('click', (function (item) {
+							return function () {
+								strikeUnstrike(item)
+							}
+						})(list[i]))
+
+
+					}
+
+
+
+				})
+		}
+
+
+		var form = document.getElementById('form-wrapper')
+		form.addEventListener('submit',async function (e) {
+
+			e.preventDefault()
+			console.log('Form submitted')
+			await checkAccessToken()
+			accessToken = getCookie('access_token')
+			console.log(accessToken);
+
+
+			var url = 'http://127.0.0.1:8000/api/task-create/'
+			let method = 'POST';
+			// if (activeItem != null){
+			// 	var url = `http://127.0.0.1:8000/api/task-update/${activeItem.id}/`
+			// 	activeItem = null
+			// }
+
+			// Check if we are editing an existing task
+			if (activeItem != null) {
+				url = `http://127.0.0.1:8000/api/task-update/${activeItem.id}/`;
+				method = 'PUT';
+				console.log('Updating task:', activeItem.id);  // Log the item being edited
+			}
+
+			var title = document.getElementById('title').value
+			const headers = {
+				'Content-type': 'application/json',
+				'X-CSRFToken': csrftoken,
+				'Authorization': `Bearer ${accessToken}`
+			};  // Include the access token
+            console.log(headers);
+			 
+			fetch(url, {
+				method: method,  // We use POST for both create and update
+				headers: headers,
+				body: JSON.stringify({ 'title': title })  // Send the title in the body
+			})
+				.then(function (response) {
+					if (response.ok) {
+						// If the request was successful, rebuild the task list and reset the form
+						buildList();
+						document.getElementById('form').reset();
+						activeItem = null;  // Reset activeItem after updating or creating
+					} else {
+						console.error('Failed to save task:', response.status);
+					}
+				})
+				.catch(function (error) {
+					console.error('Error:', error);
+				});
+		});
+		// 	fetch(url, {
+		// 		method:'POST',
+		// 		headers:{
+		// 			'Content-type':'application/json',
+		// 			'X-CSRFToken':csrftoken,
+		// 			'Authorization': `Bearer ${accessToken}`
+		// 		},
+		// 		body:JSON.stringify({'title':title})
+		// 	}
+		// 	).then(function(response){
+		// 		if (response.ok){
+		// 		    buildList()
+		// 		document.getElementById('form').reset()
+		// 		activeItem = null
+		// 		}
+		// 	})
+		// })
+
+
+		function editItem(item) {
+			checkAccessToken()
+			console.log('Item clicked:', item)
+			activeItem = item
+			document.getElementById('title').value = activeItem.title
+		}
+
+		async function deleteItem(item) {
+			await checkAccessToken()
+			console.log('Delete clicked')
+			fetch(`http://127.0.0.1:8000/api/task-delete/${item.id}/`, {
+				method: 'DELETE',
+				headers: {
+					'Content-type': 'application/json',
+					'X-CSRFToken': csrftoken,
+					'Authorization': `Bearer ${accessToken}`
+				}
+			}).then((response) => {
+				buildList()
+			})
+		}
+
+
+		function strikeUnstrike(item) {
+			console.log('Strike clicked')
+
+			item.completed = !item.completed
+			fetch(`http://127.0.0.1:8000/api/task-update/${item.id}/`, {
+				method: 'POST',
+				headers: {
+					'Content-type': 'application/json',
+					'X-CSRFToken': csrftoken,
+					'Authorization': `Bearer ${accessToken}`
+				},
+				body: JSON.stringify({ 'title': item.title, 'completed': item.completed })
+			}).then((response) => {
+				buildList()
+			})
+		}
+
+
+
+
+		// Example implementation of setCookie
+		// function setCookie(name, value, days) {
+		//     const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toUTCString();
+		//     document.cookie = `${name}=${value}; expires=${expires}; path=/; Secure; HttpOnly`;
+		// }
+
+		function setCookie(name, value, days) {
+			const d = new Date();
+			d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000)); // Convert days to milliseconds
+			document.cookie = `${name}=${value}; expires=${d.toUTCString()}; path=/`;
+		}
+
+
+
+		document.getElementById('logoutBtn').addEventListener('click', function () {
+			// Later, you can add logic to handle the logout or redirect to the login page
+			document.cookie = `access_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+			document.cookie = `refresh_token=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/`;
+			window.location.href = '/login/';  // Redirect to login page
+		});
+
+
+
+		function checkUserLogin() {
+			if (getCookie("refresh_token") === null) {
+				window.location.href = '/login/';
+			}
+		}
+
+
+
+
+		// 		// Check if the token is expired and refresh it if needed
+		// async function checkAccessToken() {
+		//     let accessToken = getCookie('access_token');
+
+		//     // If no access token exists or it's expired, try refreshing it
+		//     if (!accessToken || isTokenExpired(accessToken)) {
+		//         const refreshToken = getCookie('refresh_token');
+
+		// 		console.log("hello1")
+		//         if (!refreshToken) {
+		//             alert('Session expired. Please log in again.');
+		//             window.location.href = '/login'; // Redirect to login
+		//             return null; // No valid tokens available
+		// 			console.log("hello2")
+		//         }
+
+		//         try {
+		//             // Refresh the access token
+		//             const response = await fetch('http://127.0.0.1:8000/api/auth/token/refresh/', {
+		//                 method: 'POST',
+		//                 headers: { 'Content-Type': 'application/json' },
+		//                 body: JSON.stringify({ refresh: refreshToken })
+		//             });
+
+		//             if (response.ok) {
+		//                 const data = await response.json();
+		//                 setCookie('access_token', data.access, 1/1440); // Short-lived token
+		//                 console.log("Access token refreshed successfully.");
+		//                 return data.access;
+		//             } else {
+		//                 alert('Failed to refresh session. Please log in again.');
+		//                 window.location.href = '/login';
+		//                 return null;
+		//             }
+		//         } catch (error) {
+		//             console.error('Error refreshing access token:', error);
+		//             alert('Failed to refresh session. Please log in again.');
+		//             window.location.href = '/login';
+		//             return null;
+		//         }
+		//     }
+
+		//     return accessToken;
+		// }
+
+		// // Helper function to determine if a token is expired
+		// function isTokenExpired(token) {
+		//     try {
+		//         const payload = JSON.parse(atob(token.split('.')[1])); // Decode JWT payload
+		//         const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+		//         return payload.exp < currentTime; // Compare expiration with current time
+		//     } catch (e) {
+		//         console.error('Error decoding token:', e);
+		//         return true; // Treat invalid token as expired
+		//     }
+		// }
+
+		// // Wrapper function to handle authenticated API requests
+		// async function makeAuthenticatedRequest(url, options = {}) {
+		// 	console.log("hello3")
+		//     let accessToken = await checkAccessToken(); // Ensure a valid access token
+		//     if (!accessToken) return; // If no valid access token, exit
+
+		//     // Include the access token in the request headers
+		//     options.headers = {
+		//         ...options.headers,
+		//         'Authorization': `Bearer ${accessToken}`,
+		//         'Content-Type': 'application/json'
+		//     };
+
+		//     try {
+		//         const response = await fetch(url, options);
+		//         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+		//         return await response.json();
+		//     } catch (error) {
+		//         console.error('Error during API request:', error);
+		//         alert('Failed to fetch data. Please try again.');
+		//     }
+		// }
+
+		// // Example: Fetching the task list
+		// async function fetchTaskList() {
+		//     const data = await makeAuthenticatedRequest('http://127.0.0.1:8000/api/task-list/', { method: 'GET' });
+		// 	console.log("hello4")
+		//     if (data) {
+		//         console.log(data); // Handle the returned task list
+		//         // renderTasks(data); // Uncomment to display tasks in your UI
+		//     }
+		// }
+		// // Call fetchTaskList when needed
+		// fetchTaskList();
+
+	</script>
+
+	<!-- // 		// Function to show status messages
+// function showStatusMessage(statusCode, message) {
+//   // Try to find the status container
+//   let statusContainer = document.getElementById('status-container');
+
+//   // If it doesn't exist, create it
+//   if (!statusContainer) {
+//     statusContainer = document.createElement('div');
+//     statusContainer.id = 'status-container'; // Set ID for styling or future references
+//     document.body.appendChild(statusContainer); // Append it to the body or a specific container
+//   }
+
+//   // Set the content of the message
+//   statusContainer.innerHTML = `<strong>Status ${statusCode}:</strong> ${message}`;
+
+//   // Optional: Style based on status code (for visual feedback)
+//   if (statusCode >= 200 && statusCode < 300) {
+//     statusContainer.style.color = 'green';
+//   } else if (statusCode >= 400 && statusCode < 500) {
+//     statusContainer.style.color = 'orange';
+//   } else if (statusCode >= 500) {
+//     statusContainer.style.color = 'red';
+//   }
+// }
+
+// fetch(url)
+//   .then((response) => {
+//     console.log('Response status:', response.status);
+
+//     if (response.status === 200) {
+//       showStatusMessage(200, 'Request successful!');
+//       return response.json();
+//     } else if (response.status === 201) {
+//       showStatusMessage(201, 'Resource created successfully!');
+//       return response.json();
+//     } else if (response.status === 400) {
+//       showStatusMessage(400, 'Bad request. Please check your data.');
+//     } else if (response.status === 404) {
+//       showStatusMessage(404, 'Resource not found.');
+//     } else if (response.status === 500) {
+//       showStatusMessage(500, 'Server error. Please try again later.');
+//     } else {
+//       showStatusMessage(response.status, 'Unknown error.');
+//     }
+//   })
+//   .then(function (data) {
+//     console.log('Data:', data);
+//     buildList();
+//   })
+//   .catch((error) => {
+//     console.error('Error:', error);
+//     showStatusMessage(500, 'Failed to fetch tasks.');
+// //   });
+// function handleResponseAlert(responseData) {
+//     if (!responseData || typeof responseData !== "object") {
+//         alert("Invalid response data received.");
+//         return;
+//     }
+
+//     const { status, message } = responseData;
+
+//     switch (status) {
+//         case 200:
+//             alert(message || "Task created successfully.");
+//             break;
+
+//         case 400:
+//             // Provide detailed feedback if message is available
+//             alert(`Error: ${message || "Bad request. Please check the input and try again."}`);
+//             break;
+
+//         case 500:
+//             alert(message || "Server error: Could not process the request. Please try again later.");
+//             break;
+
+//         default:
+//             alert(`Unexpected error occurred. Status: ${status}. ${message || ""}`);
+//     }
+// }
+
+// function showStatusMessage(statusCode, message) {
+//   let statusContainer = document.getElementById('status-container');
+
+//   // If the container doesn't exist, create it
+//   if (!statusContainer) {
+//     console.log("Creating status container..."); // Debugging line
+//     statusContainer = document.createElement('div');
+//     statusContainer.id = 'status-container'; // Set ID for styling or future references
+//     document.body.appendChild(statusContainer); // Append it to the body or a specific container
+//   }
+
+//   // Set the content of the message
+//   statusContainer.innerHTML = `<strong>Status ${statusCode}:</strong> ${message}`;
+
+//   // Optional: Apply styles based on status code
+//   if (statusCode >= 200 && statusCode < 300) {
+//     console.log("Success: Applying green color"); // Debugging line
+//     statusContainer.style.color = 'green';  // Success message
+//   } else if (statusCode >= 400 && statusCode < 500) {
+//     console.log("Client error: Applying orange color"); // Debugging line
+//     statusContainer.style.color = 'orange';  // Client error
+//   } else if (statusCode >= 500) {
+//     console.log("Server error: Applying red color"); // Debugging line
+//     statusContainer.style.color = 'red';  // Server error
+//   } else {
+//     console.log("No status matched, applying default color"); // Debugging line
+//     statusContainer.style.color = 'black';  // Default color if no condition matches
+//   }
+
+//   // Optional: Additional style properties (background, font size, etc.)
+//   statusContainer.style.fontSize = '16px';
+//   statusContainer.style.fontWeight = 'bold';
+//   statusContainer.style.padding = '10px';
+//   statusContainer.style.marginTop = '10px';
+// }
+
+// // Example fetch call with status check
+// fetch('http://127.0.0.1:8000/api/task-list/')
+//   .then((response) => {
+//     // Check if the response is successful (status 200)
+//     if (response.status === 200) {
+//       showStatusMessage(200, 'Request successful!');
+//       return response.json();  // Parse the response body as JSON
+//     } else {
+//       showStatusMessage(response.status, 'Failed to load tasks.');
+//       throw new Error('Failed to fetch data');
+//     }
+//   })
+//   .then((data) => {
+//     console.log('Data:', data);  // Log the data if the response was successful
+//     // Your logic for handling the data here (e.g., building the list)
+//   })
+//   .catch((error) => {
+//     console.error('Error:', error);
+//   });
+// //  check expiray of access token
+// function checkAccessToken() {
+//     let accessToken = getCookie('access_token'); // Get the access token from cookies
+
+//     // Check if the access token is expired
+//     if (!accessToken || isTokenExpired(accessToken)) {
+//         const refreshToken = getCookie('refresh_token'); // Get the refresh token
+
+//         if (!refreshToken) {
+//             alert('Session expired. Please log in again.');
+//             window.location.href = '/login'; // Redirect to login page
+//             return;
+//         }
+
+//         // Generate a new access token using the refresh token
+//         fetch('http://127.0.0.1:8000/api/auth/token/refresh/', {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json',
+//             },
+//             body: JSON.stringify({ refresh: refreshToken }),
+//         })
+//         .then(response => response.json())
+//         .then(data => {
+//             if (data.access) {
+//                 setCookie('access_token', data.access, 1);
+// 				console.log("token updated") // Update the access token cookie
+//             } else {
+//                 alert('Session expired. Please log in again.');
+//                 window.location.href = '/login';
+//             }
+//         })
+//         .catch(error => {
+//             alert('Error refreshing access token: ' + error);
+//             window.location.href = '/login';
+//         });
+//     }
+// }
+
+// // Helper function to check if the token is expired
+// function isTokenExpired(token) {
+//     try {
+//         const payload = JSON.parse(atob(token.split('.')[1])); // Decode the JWT payload
+//         const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+//         return payload.exp < currentTime; // Compare expiration time with current time
+//     } catch (e) {
+//         console.error('Error decoding token:', e);
+//         return true; // Treat invalid token as expired
+//     }
+// }
+
+// Example implementation of getCookie
+// function getCookie(name) {
+//     const value = `; ${document.cookie}`;
+//     const parts = value.split(`; ${name}=`);
+//     if (parts.length === 2) return parts.pop().split(';').shift();
+//     return null;
+// } -->
+
+
+</body>
+<script src="{% static 'js/login.js' %}"></script>
+</html>

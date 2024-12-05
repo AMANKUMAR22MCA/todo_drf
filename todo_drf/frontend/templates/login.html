@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <!-- <link rel="icon" href="/path/to/favicon.ico" type="image/x-icon"> -->
+
+
+    <style type="text/css">
+        body {
+            background: rgb(54, 217, 182);
+            background: linear-gradient(90deg, rgba(54, 217, 182, 1) 0%, rgba(32, 152, 126, 1) 43%, rgba(0, 212, 255, 1) 100%);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        p,
+        span,
+        strike {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        #login-container {
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+            background-color: #fff;
+            margin-top: 100px;
+            margin-bottom: 100px;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 40px;
+        }
+
+        #submit {
+            background-color: #36d9b6;
+            border-radius: 0;
+            border: 0;
+            padding: 10px;
+            color: #fff;
+        }
+
+        .flex-wrapper {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+        }
+
+        h3 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #686868;
+        }
+
+        #register-error-wrapper {
+
+
+            background-color: #ffe6e6 !important;
+            color: #cc0000 !important;
+            border: 1px solid #ff4d4d;
+            /* Red border to highlight the error */
+            border-radius: 5px;
+            /* Smooth edges */
+            padding: 15px;
+            /* Spacing inside the box */
+            margin: 10px 0;
+            /* Space around the error box */
+            font-size: 14px;
+            /* Readable text size */
+            font-family: Arial, sans-serif;
+            /* Clean font */
+            line-height: 1.5;
+            /* Better readability */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow for depth */
+            display: none;
+            /* Initially hidden; show dynamically with JavaScript */
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div id="login-container">
+            <h3>Login</h3>
+            <form id="login-form">
+                <div class="flex-wrapper">
+                    <div style="flex: 6">
+                        <input id="username" class="form-control" type="text" name="username"
+                            placeholder="Enter your username" required>
+                    </div>
+                </div>
+                <div class="flex-wrapper">
+                    <div style="flex: 6">
+                        <input id="password" class="form-control" type="password" name="password"
+                            placeholder="Enter your password" required>
+                    </div>
+                </div>
+                <div class="flex-wrapper">
+                    <div style="flex: 1">
+                        <input id="submit" class="btn" type="submit" value="Login">
+                        <button type="button" class="btn btn-link" id="goToLogin">Don't have an account?
+                            Register</button>
+                        <div id="register-error-wrapper"></div>
+
+                    </div>
+                </div>
+
+
+            </form>
+        </div>
+    </div>
+
+
+</body>
+<script type="module" src="{% static 'js/login.js' %}"></script>
+
+</html>

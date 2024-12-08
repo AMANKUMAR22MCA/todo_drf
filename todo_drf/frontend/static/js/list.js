@@ -49,7 +49,7 @@ function buildList() {
     }
 
     // console.log('Access Token:', accessToken);
-    var url = 'http://127.0.0.1:8000/api/task-list/'
+    var url = 'http://13.201.89.50:8000/api/task-list/'
 
     fetch(url, {
         headers: {
@@ -161,13 +161,13 @@ form.addEventListener('submit', async function (e) {
     console.log(accessToken);
 
 
-    var url = 'http://127.0.0.1:8000/api/task-create/'
+    var url = 'http://13.201.89.50:8000/api/task-create/'
     let method = 'POST';
 
 
     // Check if we are editing an existing task
     if (activeItem != null) {
-        url = `http://127.0.0.1:8000/api/task-update/${activeItem.id}/`;
+        url = `http://13.201.89.50:8000/api/task-update/${activeItem.id}/`;
         method = 'PUT';
         console.log('Updating task:', activeItem.id);  // Log the item being edited
     }
@@ -211,7 +211,7 @@ function editItem(item) {
 async function deleteItem(item) {
     await checkAccessToken()
     console.log('Delete clicked')
-    fetch(`http://127.0.0.1:8000/api/task-delete/${item.id}/`, {
+    fetch(`http://13.201.89.50:8000/api/task-delete/${item.id}/`, {
         method: 'DELETE',
         headers: {
             'Content-type': 'application/json',
@@ -228,7 +228,7 @@ function strikeUnstrike(item) {
     console.log('Strike clicked')
 
     item.completed = !item.completed
-    fetch(`http://127.0.0.1:8000/api/task-update/${item.id}/`, {
+    fetch(`http://13.201.89.50:8000/api/task-update/${item.id}/`, {
         method: 'POST',
         headers: {
             'Content-type': 'application/json',

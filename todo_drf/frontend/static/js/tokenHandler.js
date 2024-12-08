@@ -22,7 +22,7 @@ export async function checkAccessToken() {
         }
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/api/auth/token/refresh/', {
+            const response = await fetch('http://13.201.89.50:8000/api/auth/token/refresh/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refresh: refreshToken })

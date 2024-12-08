@@ -12,7 +12,7 @@ let accessToken = getCookie('access_token');
 
 const loginSection = document.getElementById('loginSection');
 goToLogin.addEventListener('click', function () {
-    window.location.href = 'http://127.0.0.1:8000/login/';
+    window.location.href = 'http://13.201.89.50:8000/login/';
 });
 
 
@@ -34,7 +34,7 @@ document.getElementById('register-form').addEventListener('submit', function (e)
     };
 
     // Send the form data via fetch
-    fetch('http://127.0.0.1:8000/api/register/', {
+    fetch('http://13.201.89.50:8000/api/register/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -46,7 +46,7 @@ document.getElementById('register-form').addEventListener('submit', function (e)
         .then(response => {
             if (response.ok) {
                 alert('Registered successfully!');
-                window.location.href = 'http://127.0.0.1:8000/login/';
+                window.location.href = 'http://13.201.89.50:8000/login/';
             } else {
                 return response.json().then(data => {
                     clearPreviousErrorMessages(); // Clear any existing error messages

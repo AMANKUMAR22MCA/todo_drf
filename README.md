@@ -1,10 +1,10 @@
-TODO
+#TODO
 
-🖍 To-Do Application
+##🖍 To-Do Application
 
 A feature-rich To-Do Application built with Django, JavaScript, and Bootstrap to help users manage their daily tasks efficiently. This app includes user authentication, task management, and a sleek, responsive interface.
 
-📊 Features
+##📊 Features
 
 User Authentication:
 
@@ -38,15 +38,15 @@ AWS Hosting:
 
 Deployed on AWS for high availability and scalability.
 
-🌐 Live Demo
+##🌐 Live Demo
 
 Web Application:
 
-🚀 Hosted on AWS: View Live Application
+##🚀 Hosted on AWS: View Live Application : http://13.201.89.50:8000
 
 Video Walkthrough:
 
-🚀 Watch Demo on YouTube
+🚀 Watch Demo on YouTube  : https://www.youtube.com/watch?v=5GKIs813jxQ
 
 🔧 Tech Stack
 
@@ -62,6 +62,7 @@ Hosting: AWS EC2 with Nginx and Gunicorn
 
 🔎 Screenshots
 
+![image](https://github.com/user-attachments/assets/e6b73a54-0980-498d-9ec7-97163950fa51)
 
 ![image](https://github.com/user-attachments/assets/6ddca943-6c8a-4681-a248-f738101ab3ef)
 <br>
@@ -69,14 +70,12 @@ Hosting: AWS EC2 with Nginx and Gunicorn
 ![image](https://github.com/user-attachments/assets/7ccb4f46-1d38-4551-aa1c-763bdb8e456a)
 
 <br>
-![image](https://github.com/user-attachments/assets/e6b73a54-0980-498d-9ec7-97163950fa51)
-<br>
 
 
 
 
 
-📅 Deployment Steps
+##📅 Deployment Steps
 
 Dockerize the Application:
 
@@ -106,13 +105,13 @@ Use AWS CloudWatch for performance monitoring.
 
 Regularly update the Docker images and application code.
 
-📑 Documentation
+##📑 Documentation
 
 API Documentation: View API Docs
 
 Deployment Guide: View Deployment Guide
 
-✨ Future Enhancements
+##✨ Future Enhancements
 
 Add task prioritization.
 
@@ -120,6 +119,6 @@ Introduce collaborative task sharing.
 
 Integrate email notifications for task reminders.
 
-Developed with ❤️ by [Your Name].
+Developed with ❤️ by Aman Kumar
 
 

@@ -1,10 +1,10 @@
-#TODO
+# TODO
 
-##🖍 To-Do Application
+## 🖍 To-Do Application
 
 A feature-rich To-Do Application built with Django, JavaScript, and Bootstrap to help users manage their daily tasks efficiently. This app includes user authentication, task management, and a sleek, responsive interface.
 
-##📊 Features
+## 📊 Features
 
 User Authentication:
 
@@ -38,17 +38,17 @@ AWS Hosting:
 
 Deployed on AWS for high availability and scalability.
 
-##🌐 Live Demo
+## 🌐 Live Demo
 
 Web Application:
 
-##🚀 Hosted on AWS: View Live Application : http://13.201.89.50:8000
+## 🚀 Hosted on AWS: View Live Application : http://13.201.89.50:8000
 
 Video Walkthrough:
 
-🚀 Watch Demo on YouTube  : https://www.youtube.com/watch?v=5GKIs813jxQ
+## 🚀 Watch Demo on YouTube  : https://www.youtube.com/watch?v=5GKIs813jxQ
 
-🔧 Tech Stack
+## 🔧 Tech Stack
 
 Backend: Django
 
@@ -60,7 +60,7 @@ Containerization: Docker
 
 Hosting: AWS EC2 with Nginx and Gunicorn
 
-🔎 Screenshots
+## 🔎 Screenshots
 
 ![image](https://github.com/user-attachments/assets/e6b73a54-0980-498d-9ec7-97163950fa51)
 
@@ -75,7 +75,7 @@ Hosting: AWS EC2 with Nginx and Gunicorn
 
 
 
-##📅 Deployment Steps
+## 📅 Deployment Steps
 
 Dockerize the Application:
 
@@ -105,13 +105,13 @@ Use AWS CloudWatch for performance monitoring.
 
 Regularly update the Docker images and application code.
 
-##📑 Documentation
+## 📑 Documentation
 
 API Documentation: View API Docs
 
 Deployment Guide: View Deployment Guide
 
-##✨ Future Enhancements
+## ✨ Future Enhancements
 
 Add task prioritization.
 
